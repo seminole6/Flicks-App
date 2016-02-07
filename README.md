@@ -40,7 +40,7 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+The biggest challenge while creating this application was just getting used to the swift syntax and familiarizing myself with NSDictionaries.
 
 ## License
 
