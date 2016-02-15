@@ -17,9 +17,22 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     var movies: [NSDictionary]?
     var filteredData: [NSDictionary]?
+    var endpoint: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        searchBar.barTintColor = UIColor.blackColor()
+        
+        if let navigationBar = navigationController?.navigationBar {
+            navigationBar.barTintColor = UIColor.grayColor()
+            navigationBar.titleTextAttributes = [
+                NSForegroundColorAttributeName : UIColor.blackColor()
+            ]
+            UINavigationBar.appearance().tintColor = UIColor.blackColor()
+        }
+        
+        //self.navigationController?.navigationBar.barStyle = UIBarStyle.Black
 
         tableView.dataSource = self
         tableView.delegate = self
@@ -39,7 +52,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         MBProgressHUD.showHUDAddedTo(self.view, animated: true)
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
+        let url = NSURL(string: "https://api.themoviedb.org/3/movie/\(endpoint)?api_key=\(apiKey)")
         let myRequest = NSURLRequest(
             URL: url!,
             cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalCacheData,
@@ -75,7 +88,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     func refreshControlAction(refreshControl: UIRefreshControl) {
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
+        let url = NSURL(string: "https://api.themoviedb.org/3/movie/\(endpoint)?api_key=\(apiKey)")
         let myRequest = NSURLRequest(
             URL: url!,
             cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalCacheData,
@@ -128,14 +141,18 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let movie = filteredData![indexPath.row]
         let title = movie["title"] as! String
         let overview = movie["overview"] as! String
-        
-        let baseUrl = "http://image.tmdb.org/t/p/w500"
-        let posterPath = movie["poster_path"]as! String
-        let imageUrl = NSURL(string: baseUrl + posterPath)
-        
-        cell.posterView.setImageWithURL(imageUrl!)
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
+        
+        let baseUrl = "http://image.tmdb.org/t/p/w500"
+        if let posterPath = movie["poster_path"] as? String {
+            let imageUrl = NSURL(string: baseUrl + posterPath)
+            cell.posterView.setImageWithURL(imageUrl!)
+        }
+        
+        let backgroundView = UIView()
+        backgroundView.backgroundColor = UIColor.grayColor()
+        cell.selectedBackgroundView = backgroundView
         
         return cell
     }
@@ -145,10 +162,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         if searchText.isEmpty {
             filteredData = movies
         } else {
-            // The user has entered text into the search box
-            // Use the filter method to iterate over all items in the data array
-            // For each item, return true if the item should be included and false if the
-            // item should NOT be included
             filteredData = movies!.filter({(dataItem: NSDictionary) -> Bool in
                 
                 var item = dataItem["title"] as! String
@@ -173,6 +186,25 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         searchBar.resignFirstResponder()
         filteredData = movies
         tableView.reloadData()
+    }
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.reloadRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+    }
+    
+    // MARK: - Navigation
+    
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        let cell = sender as! UITableViewCell
+        let indexPath = tableView.indexPathForCell(cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destinationViewController as! DetailViewController
+        detailViewController.movie = movie
+        
     }
 
 }
